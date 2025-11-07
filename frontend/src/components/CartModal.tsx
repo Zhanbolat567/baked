@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAppStore, useCartStore, useAuthStore } from '../store';
 import PaymentModal from './PaymentModal';
+import OrderModal from './OrderModal';
 import api from '../services/api';
 import './components.css';
 
@@ -19,7 +20,7 @@ const CartModal: React.FC<CartModalProps> = ({ onClose }) => {
   const [clientPhone, setClientPhone] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [showMap, setShowMap] = useState(false);
-  const [showOrderForm, setShowOrderForm] = useState(false);
+  const [showOrderModal, setShowOrderModal] = useState(false);
   const [orderComment, setOrderComment] = useState('');
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderLoading, setOrderLoading] = useState(false);
@@ -80,7 +81,7 @@ const CartModal: React.FC<CartModalProps> = ({ onClose }) => {
       await api.createOrder(orderData);
       cart.clearCart();
       setOrderSuccess(true);
-      setShowOrderForm(false);
+      setShowOrderModal(false);
     } catch (err) {
       alert('Ошибка при оформлении заказа');
     } finally {
@@ -269,90 +270,25 @@ const CartModal: React.FC<CartModalProps> = ({ onClose }) => {
           )}
         </div>
 
-        {cart.items.length > 0 && !showOrderForm && (
+        {cart.items.length > 0 && !showOrderModal && (
           <div className="modal-footer">
             <button
               className="btn btn-primary btn-full"
-              onClick={() => setShowOrderForm(true)}
+              onClick={() => setShowOrderModal(true)}
             >
-              Продолжить оформление
+              Оформить заказ
             </button>
           </div>
         )}
-
-        {cart.items.length > 0 && showOrderForm && !orderSuccess && (
-          <form className="cart-order-form" onSubmit={handleOrderSubmit}>
-            {orderType === 'pickup' ? (
-              <>
-                <div className="cart-order-form-title">Самовывоз</div>
-                <div className="cart-order-form-row">
-                  <span>Адрес:</span> <span>{pickupAddress}</span>
-                </div>
-                <div className="cart-order-form-row">
-                  <span>Имя:</span> <span>{clientName}</span>
-                </div>
-                <div className="cart-order-form-row">
-                  <span>Телефон:</span> <span>{clientPhone}</span>
-                </div>
-                <div className="cart-order-form-row">
-                  <label>Комментарий к заказу
-                    <input type="text" value={orderComment} onChange={e => setOrderComment(e.target.value)} placeholder="Комментарий" />
-                  </label>
-                </div>
-                <div className="cart-order-form-row">
-                  <span>Товары в заказе: {cart.items.length} шт.</span>
-                  <span>{cart.getTotalAmount()} ₸</span>
-                </div>
-                <div className="cart-order-form-row">
-                  <span>Итого:</span>
-                  <span>{cart.getTotalAmount()} ₸</span>
-                </div>
-                <button className="btn btn-primary btn-full" type="submit" disabled={orderLoading}>
-                  {orderLoading ? 'Оформляем...' : 'Заказать'}
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="cart-order-form-title">Доставка</div>
-                <div className="cart-order-form-row">
-                  <span>Адрес доставки:</span> <span>{deliveryAddress}</span>
-                </div>
-                <div className="cart-order-form-row">
-                  <label>Ваше имя
-                    <input type="text" value={clientName} onChange={e => setClientName(e.target.value)} placeholder="Имя" />
-                  </label>
-                </div>
-                <div className="cart-order-form-row">
-                  <label>Ваш номер телефона
-                    <input type="tel" value={clientPhone} onChange={e => setClientPhone(e.target.value)} placeholder="+7" />
-                  </label>
-                </div>
-                <div className="cart-order-form-row">
-                  <label>Комментарий к заказу
-                    <input type="text" value={orderComment} onChange={e => setOrderComment(e.target.value)} placeholder="Комментарий" />
-                  </label>
-                </div>
-                <div className="cart-order-form-row">
-                  <span>Товары в заказе: {cart.items.length} шт.</span>
-                  <span>{cart.getTotalAmount()} ₸</span>
-                </div>
-                <div className="cart-order-form-row">
-                  <span>Итого:</span>
-                  <span>{cart.getTotalAmount()} ₸</span>
-                </div>
-                <button className="btn btn-primary btn-full" type="submit" disabled={orderLoading}>
-                  {orderLoading ? 'Оформляем...' : 'Заказать'}
-                </button>
-              </>
-            )}
-          </form>
-        )}
-        {orderSuccess && (
-          <div className="cart-order-success">
-            <h3>Заказ успешно оформлен!</h3>
-            <p>Спасибо за ваш заказ. Мы скоро свяжемся с вами.</p>
-            <button className="btn btn-secondary btn-full" onClick={onClose}>Закрыть</button>
-          </div>
+        {showOrderModal && (
+          <OrderModal
+            orderType={orderType}
+            pickupAddress={pickupAddress}
+            deliveryAddress={deliveryAddress}
+            cart={cart}
+            onClose={() => setShowOrderModal(false)}
+            onSubmit={handleOrderSubmit}
+          />
         )}
       </div>
     </div>

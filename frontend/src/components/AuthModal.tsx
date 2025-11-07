@@ -18,6 +18,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
   // Form state
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
+  const [repeatPassword, setRepeatPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -101,6 +102,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
       setLoading(false);
     }
   };
+
+  // Компонент для отображения одного правила пароля
+  function PasswordRule({ valid, text }: { valid: boolean; text: string }) {
+    return (
+      <li className={valid ? 'password-rule valid' : 'password-rule'}>
+        {valid ? <span style={{color: '#2ecc40'}}>✔</span> : <span style={{color: '#ff4136'}}>✖</span>} {text}
+      </li>
+    );
+  }
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -188,7 +198,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  minLength={6}
+                  minLength={8}
                   placeholder="••••••••"
                 />
                 <button
@@ -200,6 +210,39 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
                 </button>
               </div>
             </div>
+            {/* Repeat Password */}
+            {!isLogin && (
+              <div className="form-group">
+                <label className="form-label">Повторите пароль *</label>
+                <div className="password-input-wrapper">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    className="form-input"
+                    value={repeatPassword}
+                    onChange={(e) => setRepeatPassword(e.target.value)}
+                    required
+                    minLength={8}
+                    placeholder="••••••••"
+                  />
+                </div>
+              </div>
+            )}
+            {/* Password Rules */}
+            {!isLogin && (
+              <div className="password-rules">
+                <div className="password-rules-title">Требования к паролю</div>
+                <ul>
+                  <PasswordRule valid={password.length >= 8} text="Минимум 8 символов" />
+                  <PasswordRule valid={/[A-Z]/.test(password)} text="Содержит заглавную букву" />
+                  <PasswordRule valid={/[a-z]/.test(password)} text="Содержит строчную букву" />
+                  <PasswordRule valid={/\d/.test(password)} text="Содержит цифру" />
+                  <PasswordRule valid={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)} text="Содержит специальный символ" />
+                  <PasswordRule valid={!/(0123|1234|abcd|qwerty|password)/i.test(password)} text="Не содержит простых последовательностей" />
+                  <PasswordRule valid={!/(.)\1{2,}/.test(password)} text="Не содержит повторяющихся символов" />
+                  <PasswordRule valid={password === repeatPassword && password.length > 0} text="Пароли должны совпадать" />
+                </ul>
+              </div>
+            )}
 
             {/* Error Message */}
             {error && (

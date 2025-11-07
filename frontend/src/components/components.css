@@ -108,6 +108,40 @@
   cursor: not-allowed;
 }
 
+/* Password rules block */
+.password-rules {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+  font-size: 15px;
+}
+.password-rules-title {
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--text-primary);
+}
+.password-rules ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.password-rule {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  color: #888;
+}
+.password-rule.valid {
+  color: #2ecc40;
+}
+.password-rule span {
+  font-size: 18px;
+  min-width: 22px;
+  display: inline-block;
+}
+
 /* ========================================
    CART MODAL
    ======================================== */
@@ -227,7 +261,7 @@
   color: white;
   font-size: 18px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   transition: all 0.2s;
 }
@@ -1088,4 +1122,38 @@
   .option-groups-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Order Modal Styles */
+.order-modal {
+  max-width: 480px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.10);
+  padding: 0;
+}
+.order-form {
+  padding: 24px 24px 16px 24px;
+}
+.order-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  font-size: 15px;
+}
+.order-row label {
+  flex: 1;
+  color: var(--text-secondary);
+}
+.order-row input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  margin-top: 4px;
+  font-size: 15px;
+}
+.order-modal .btn-full {
+  margin-top: 18px;
 }
