@@ -43,7 +43,6 @@ def create_option_groups(db: Session):
     milk_group = OptionGroup(
         name_rus="Молоко",
         name_kaz="Сүт",
-        name_eng="Milk",
         is_required=False,
         is_multiple=False
     )
@@ -51,11 +50,11 @@ def create_option_groups(db: Session):
     db.flush()
     
     milk_options = [
-        {"name_rus": "Обычное", "name_kaz": "Қарапайым", "name_eng": "Regular", "price": 0},
-        {"name_rus": "Кокосовое", "name_kaz": "Кокос", "name_eng": "Coconut", "price": 400},
-        {"name_rus": "Миндальное", "name_kaz": "Бадам", "name_eng": "Almond", "price": 400},
-        {"name_rus": "Овсяное", "name_kaz": "Сұлы", "name_eng": "Oat", "price": 400},
-        {"name_rus": "Фундук", "name_kaz": "Фундук", "name_eng": "Hazelnut", "price": 400},
+        {"name_rus": "Обычное", "name_kaz": "Қарапайым", "price": 0},
+        {"name_rus": "Кокосовое", "name_kaz": "Кокос", "price": 400},
+        {"name_rus": "Миндальное", "name_kaz": "Бадам", "price": 400},
+        {"name_rus": "Овсяное", "name_kaz": "Сұлы", "price": 400},
+        {"name_rus": "Фундук", "name_kaz": "Фундук", "price": 400},
     ]
     
     for opt in milk_options:
@@ -66,7 +65,6 @@ def create_option_groups(db: Session):
     syrup_group = OptionGroup(
         name_rus="Сироп",
         name_kaz="Сироп",
-        name_eng="Syrup",
         is_required=False,
         is_multiple=True
     )
@@ -74,13 +72,13 @@ def create_option_groups(db: Session):
     db.flush()
     
     syrup_options = [
-        {"name_rus": "Карамель", "name_kaz": "Карамель", "name_eng": "Caramel", "price": 300},
-        {"name_rus": "Соленая карамель", "name_kaz": "Тұзды карамель", "name_eng": "Salted Caramel", "price": 300},
-        {"name_rus": "Шоколад", "name_kaz": "Шоколад", "name_eng": "Chocolate", "price": 300},
-        {"name_rus": "Ваниль", "name_kaz": "Ваниль", "name_eng": "Vanilla", "price": 300},
-        {"name_rus": "Попкорн", "name_kaz": "Попкорн", "name_eng": "Popcorn", "price": 300},
-        {"name_rus": "Кокос", "name_kaz": "Кокос", "name_eng": "Coconut", "price": 300},
-        {"name_rus": "Жареный лесной орех", "name_kaz": "Қуырылған орман жаңғағы", "name_eng": "Roasted Hazelnut", "price": 300},
+        {"name_rus": "Карамель", "name_kaz": "Карамель", "price": 300},
+        {"name_rus": "Соленая карамель", "name_kaz": "Тұзды карамель", "price": 300},
+        {"name_rus": "Шоколад", "name_kaz": "Шоколад", "price": 300},
+        {"name_rus": "Ваниль", "name_kaz": "Ваниль", "price": 300},
+        {"name_rus": "Попкорн", "name_kaz": "Попкорн", "price": 300},
+        {"name_rus": "Кокос", "name_kaz": "Кокос", "price": 300},
+        {"name_rus": "Жареный лесной орех", "name_kaz": "Қуырылған орман жаңғағы", "price": 300},
     ]
     
     for opt in syrup_options:
@@ -91,7 +89,6 @@ def create_option_groups(db: Session):
     shot_group = OptionGroup(
         name_rus="Дополнительный шот",
         name_kaz="Қосымша шот",
-        name_eng="Extra Shot",
         is_required=False,
         is_multiple=False
     )
@@ -102,7 +99,6 @@ def create_option_groups(db: Session):
         group_id=shot_group.id,
         name_rus="Эспрессо",
         name_kaz="Эспрессо",
-        name_eng="Espresso",
         price=390
     )
     db.add(shot_option)
@@ -119,15 +115,15 @@ def create_categories(db: Session):
         return
     
     categories = [
-        {"name_rus": "Кофе", "name_kaz": "Кофе", "name_eng": "Coffee", "order": 1},
-        {"name_rus": "Лимонады", "name_kaz": "Лимонадтар", "name_eng": "Lemonades", "order": 2},
-        {"name_rus": "Холодный кофе", "name_kaz": "Суық кофе", "name_eng": "Cold Coffee", "order": 3},
-        {"name_rus": "Чай", "name_kaz": "Шай", "name_eng": "Tea", "order": 4},
-        {"name_rus": "Молочный Коктейль", "name_kaz": "Сүт коктейлі", "name_eng": "Milkshake", "order": 5},
-        {"name_rus": "Слуш", "name_kaz": "Слаш", "name_eng": "Slush", "order": 6},
-        {"name_rus": "Матча", "name_kaz": "Матча", "name_eng": "Matcha", "order": 7},
-        {"name_rus": "Напитки", "name_kaz": "Сусындар", "name_eng": "Beverages", "order": 8},
-        {"name_rus": "Выпечка", "name_kaz": "Нан-тоқаш", "name_eng": "Bakery", "order": 9},
+        {"name_rus": "Кофе", "name_kaz": "Кофе", "order": 1},
+        {"name_rus": "Лимонады", "name_kaz": "Лимонадтар", "order": 2},
+        {"name_rus": "Холодный кофе", "name_kaz": "Суық кофе", "order": 3},
+        {"name_rus": "Чай", "name_kaz": "Шай", "order": 4},
+        {"name_rus": "Молочный Коктейль", "name_kaz": "Сүт коктейлі", "order": 5},
+        {"name_rus": "Слуш", "name_kaz": "Слаш", "order": 6},
+        {"name_rus": "Матча", "name_kaz": "Матча", "order": 7},
+        {"name_rus": "Напитки", "name_kaz": "Сусындар", "order": 8},
+        {"name_rus": "Выпечка", "name_kaz": "Нан-тоқаш", "order": 9},
     ]
     
     for cat in categories:
@@ -162,10 +158,8 @@ def create_products(db: Session):
             "category_id": coffee_cat.id,
             "name_rus": "Эспрессо",
             "name_kaz": "Эспрессо",
-            "name_eng": "Espresso",
             "description_rus": "Чистый вкус эспрессо, разбавленный горячей водой. Легкий и бодрящий",
             "description_kaz": "Таза эспрессо дәмі, ыстық сумен араластырылған. Жеңіл және сергітетін",
-            "description_eng": "Pure espresso taste, diluted with hot water. Light and invigorating",
             "base_price": 590,
             "status": ProductStatus.ACTIVE
         },
@@ -173,10 +167,8 @@ def create_products(db: Session):
             "category_id": coffee_cat.id,
             "name_rus": "Американо",
             "name_kaz": "Американо",
-            "name_eng": "Americano",
             "description_rus": "Чистый вкус эспрессо, разбавленный горячей водой. Легкий и бодрящий",
             "description_kaz": "Таза эспрессо дәмі, ыстық сумен араластырылған. Жеңіл және сергітетін",
-            "description_eng": "Pure espresso taste, diluted with hot water. Light and invigorating",
             "base_price": 790,
             "status": ProductStatus.ACTIVE
         },
@@ -184,10 +176,8 @@ def create_products(db: Session):
             "category_id": coffee_cat.id,
             "name_rus": "Латте",
             "name_kaz": "Латте",
-            "name_eng": "Latte",
             "description_rus": "Нежный кофе с молоком и легкой пенкой",
             "description_kaz": "Сүтпен жұмсақ кофе және жеңіл көбік",
-            "description_eng": "Gentle coffee with milk and light foam",
             "base_price": 1090,
             "status": ProductStatus.ACTIVE
         },
@@ -195,10 +185,8 @@ def create_products(db: Session):
             "category_id": coffee_cat.id,
             "name_rus": "Капучино",
             "name_kaz": "Капучино",
-            "name_eng": "Cappuccino",
             "description_rus": "Идеальный баланс эспрессо, молока и плотной пенки",
             "description_kaz": "Эспрессо, сүт және тығыз көбіктің керемет балансы",
-            "description_eng": "Perfect balance of espresso, milk and dense foam",
             "base_price": 1090,
             "status": ProductStatus.ACTIVE
         },

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAppStore, useCartStore, useAuthStore } from '../store';
 import PaymentModal from './PaymentModal';
 import OrderModal from './OrderModal';
+import DeliveryModal, { DeliveryAddress } from './DeliveryModal';
 import api from '../services/api';
 import './components.css';
 
@@ -19,7 +20,8 @@ const CartModal: React.FC<CartModalProps> = ({ onClose }) => {
   const [clientName, setClientName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
-  const [showMap, setShowMap] = useState(false);
+  const [showDeliveryModal, setShowDeliveryModal] = useState(false);
+  const [deliveryData, setDeliveryData] = useState<DeliveryAddress | null>(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [orderComment, setOrderComment] = useState('');
   const [orderSuccess, setOrderSuccess] = useState(false);
@@ -29,19 +31,18 @@ const CartModal: React.FC<CartModalProps> = ({ onClose }) => {
     switch (language) {
       case 'rus': return item.name_rus;
       case 'kaz': return item.name_kaz;
-      case 'eng': return item.name_eng;
       default: return item.name_rus;
     }
   };
 
   const getText = (key: string): string => {
     const translations: Record<string, Record<string, string>> = {
-      cart: { rus: 'Корзина', kaz: 'Себет', eng: 'Cart' },
-      empty: { rus: 'Корзина пуста', kaz: 'Себет бос', eng: 'Cart is empty' },
-      addItems: { rus: 'Добавьте товары из меню', kaz: 'Мәзірден тауарлар қосыңыз', eng: 'Add items from menu' },
-      total: { rus: 'Итого', kaz: 'Барлығы', eng: 'Total' },
-      bonuses: { rus: 'Будет начислено бонусов', kaz: 'Бонустар жиналады', eng: 'Bonuses to earn' },
-      order: { rus: 'Заказать', kaz: 'Тапсырыс беру', eng: 'Order' },
+      cart: { rus: 'Корзина', kaz: 'Себет' },
+      empty: { rus: 'Корзина пуста', kaz: 'Себет бос' },
+      addItems: { rus: 'Добавьте товары из меню', kaz: 'Мәзірден тауарлар қосыңыз' },
+      total: { rus: 'Итого', kaz: 'Барлығы' },
+      bonuses: { rus: 'Будет начислено бонусов', kaz: 'Бонустар жиналады' },
+      order: { rus: 'Заказать', kaz: 'Тапсырыс беру' },
     };
     return translations[key]?.[language] || translations[key]?.['rus'] || key;
   };
@@ -155,33 +156,32 @@ const CartModal: React.FC<CartModalProps> = ({ onClose }) => {
           {/* Доставка */}
           {cart.items.length > 0 && orderType === 'delivery' && (
             <>
-              {!showMap ? (
-                <div className="cart-address-block">
-                  <span className="cart-address-label">{deliveryAddress || 'Адрес доставки не выбран'}</span>
-                  <button className="btn btn-secondary" onClick={() => setShowMap(true)}>
-                    Выбрать адрес на карте
-                  </button>
-                </div>
-              ) : (
-                <div className="cart-map-block">
-                  <div className="cart-map-placeholder">
-                    {/* Здесь будет карта. Для примера — просто блок. */}
-                    <div style={{height: 200, background: '#e3e3e3', borderRadius: 12, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18}}>
-                      Карта доставки (заглушка)
+              <div className="cart-address-block">
+                {deliveryData ? (
+                  <div className="delivery-info-preview">
+                    <div className="delivery-preview-label">Адрес доставки:</div>
+                    <div className="delivery-preview-address">{deliveryData.address}</div>
+                    {(deliveryData.apartment || deliveryData.entrance || deliveryData.floor) && (
+                      <div className="delivery-preview-details">
+                        {deliveryData.apartment && `кв. ${deliveryData.apartment}`}
+                        {deliveryData.entrance && `, подъезд ${deliveryData.entrance}`}
+                        {deliveryData.floor && `, этаж ${deliveryData.floor}`}
+                      </div>
+                    )}
+                    <div className="delivery-preview-contact">
+                      <strong>{deliveryData.name}</strong> — {deliveryData.phone}
                     </div>
-                    <input
-                      type="text"
-                      value={deliveryAddress}
-                      onChange={e => setDeliveryAddress(e.target.value)}
-                      placeholder="Введите адрес доставки"
-                      style={{width: '100%', marginBottom: 8}}
-                    />
-                    <button className="btn btn-primary" onClick={() => setShowMap(false)}>
-                      Готово
-                    </button>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <span className="cart-address-label">Укажите адрес доставки</span>
+                )}
+                <button 
+                  className="btn btn-primary" 
+                  onClick={() => setShowDeliveryModal(true)}
+                >
+                  {deliveryData ? 'Изменить адрес' : 'Готово'}
+                </button>
+              </div>
             </>
           )}
 
@@ -288,6 +288,23 @@ const CartModal: React.FC<CartModalProps> = ({ onClose }) => {
             cart={cart}
             onClose={() => setShowOrderModal(false)}
             onSubmit={handleOrderSubmit}
+          />
+        )}
+
+        {showDeliveryModal && (
+          <DeliveryModal
+            initialAddress={deliveryData?.address || ''}
+            onSave={(data) => {
+              setDeliveryData(data);
+              setDeliveryAddress(data.address);
+              setClientName(data.name);
+              setClientPhone(data.phone);
+              if (data.comment) {
+                setOrderComment(data.comment);
+              }
+              setShowDeliveryModal(false);
+            }}
+            onClose={() => setShowDeliveryModal(false)}
           />
         )}
       </div>

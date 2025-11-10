@@ -4,12 +4,11 @@ export const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localho
 export const API_BASE_PATH = '/api/v1';
 
 // Languages
-export type Language = 'rus' | 'kaz' | 'eng';
+export type Language = 'rus' | 'kaz';
 
 export const LANGUAGES = {
   RUS: 'rus' as Language,
   KAZ: 'kaz' as Language,
-  ENG: 'eng' as Language,
 };
 
 // User roles

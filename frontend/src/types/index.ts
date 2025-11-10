@@ -1,4 +1,4 @@
-export type Language = 'rus' | 'kaz' | 'eng';
+export type Language = 'rus' | 'kaz';
 
 export type UserRole = 'client' | 'admin';
 
@@ -18,7 +18,6 @@ export interface Option {
   group_id: number;
   name_rus: string;
   name_kaz: string;
-  name_eng: string;
   price: number;
   is_available: boolean;
 }
@@ -27,7 +26,6 @@ export interface OptionGroup {
   id: number;
   name_rus: string;
   name_kaz: string;
-  name_eng: string;
   is_required: boolean;
   is_multiple: boolean;
   options: Option[];
@@ -40,10 +38,8 @@ export interface Product {
   category_id: number;
   name_rus: string;
   name_kaz: string;
-  name_eng: string;
   description_rus?: string | null;
   description_kaz?: string | null;
-  description_eng?: string | null;
   base_price: number;
   image_url?: string | null;
   status: ProductStatus;
@@ -54,7 +50,6 @@ export interface MenuCategory {
   id: number;
   name_rus: string;
   name_kaz: string;
-  name_eng: string;
   order: number;
   is_active: boolean;
   products: Product[];
@@ -81,7 +76,6 @@ export interface Category {
   id: number;
   name_rus: string;
   name_kaz: string;
-  name_eng: string;
   order: number;
   is_active: boolean;
   created_at: string;

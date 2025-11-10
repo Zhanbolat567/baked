@@ -8,7 +8,6 @@ import AdminSidebar from '../../components/admin/AdminSidebar';
 type CategoryFormState = {
   name_rus: string;
   name_kaz: string;
-  name_eng: string;
   order: number;
   is_active: boolean;
 };
@@ -16,7 +15,6 @@ type CategoryFormState = {
 const defaultCategoryForm: CategoryFormState = {
   name_rus: '',
   name_kaz: '',
-  name_eng: '',
   order: 0,
   is_active: true,
 };
@@ -99,7 +97,6 @@ const Categories: React.FC = () => {
     setCategoryForm({
       name_rus: category.name_rus,
       name_kaz: category.name_kaz,
-      name_eng: category.name_eng,
       order: category.order,
       is_active: category.is_active,
     });
@@ -216,15 +213,6 @@ const Categories: React.FC = () => {
                     required
                     value={categoryForm.name_kaz}
                     onChange={(e) => setCategoryForm({ ...categoryForm, name_kaz: e.target.value })}
-                  />
-                </label>
-                <label>
-                  Название (eng)
-                  <input
-                    type="text"
-                    required
-                    value={categoryForm.name_eng}
-                    onChange={(e) => setCategoryForm({ ...categoryForm, name_eng: e.target.value })}
                   />
                 </label>
                 <label>

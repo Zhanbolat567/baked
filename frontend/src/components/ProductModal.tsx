@@ -12,7 +12,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   const language = useAppStore((state) => state.language);
   const addItem = useCartStore((state) => state.addItem);
 
-  const [selectedSize, setSelectedSize] = useState<number>(350);
   const [selectedOptions, setSelectedOptions] = useState<Map<number, Option[]>>(new Map());
   const [quantity, setQuantity] = useState(1);
 
@@ -20,7 +19,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
     switch (language) {
       case 'rus': return item.name_rus;
       case 'kaz': return item.name_kaz;
-      case 'eng': return item.name_eng;
       default: return item.name_rus;
     }
   };
@@ -29,7 +27,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
     switch (language) {
       case 'rus': return item.description_rus;
       case 'kaz': return item.description_kaz;
-      case 'eng': return item.description_eng;
       default: return item.description_rus;
     }
   };
@@ -65,11 +62,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   const calculateTotalPrice = (): number => {
     let total = product.base_price;
     
-    // Add size difference (if applicable)
-    if (selectedSize === 450) {
-      total += 100; // Примерная разница в цене
-    }
-    
     // Add options prices
     selectedOptions.forEach((options) => {
       options.forEach(option => {
@@ -82,13 +74,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
 
   const handleAddToCart = () => {
     const cartOptions: CartItemOption[] = [];
-    
-    // Add size as option
-    cartOptions.push({
-      option_group_name: 'Размер',
-      option_name: `${selectedSize} мл`,
-      option_price: selectedSize === 450 ? 100 : 0
-    });
     
     // Add selected options
     product.option_groups.forEach(group => {
@@ -108,51 +93,35 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal product-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2 className="modal-title">{getLocalizedName(product)}</h2>
-          <button className="modal-close" onClick={onClose}>×</button>
-        </div>
-
-        <div className="modal-body">
-          {/* Product Image */}
-          {product.image_url && (
-            <div className="product-modal-image">
-              <img src={product.image_url} alt={getLocalizedName(product)} />
-            </div>
-          )}
-
-          {/* Product Description */}
-          {getLocalizedDescription(product) && (
-            <p className="product-description">{getLocalizedDescription(product)}</p>
-          )}
-
-          {/* Size Selection */}
-          <div className="option-section">
-            <h3 className="option-section-title">
-              {language === 'rus' ? 'Размер' : language === 'kaz' ? 'Өлшемі' : 'Size'}
-            </h3>
-            <div className="size-buttons">
-              <button
-                className={`size-btn ${selectedSize === 350 ? 'active' : ''}`}
-                onClick={() => setSelectedSize(350)}
-              >
-                350 мл
-              </button>
-              <button
-                className={`size-btn ${selectedSize === 450 ? 'active' : ''}`}
-                onClick={() => setSelectedSize(450)}
-              >
-                450 мл
-              </button>
-            </div>
+      <div className="modal product-modal-large" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>×</button>
+        
+        <div className="product-modal-container">
+          {/* Left Side - Image */}
+          <div className="product-modal-left">
+            {product.image_url && (
+              <img src={product.image_url} alt={getLocalizedName(product)} className="product-modal-img" />
+            )}
           </div>
 
-          {/* Option Groups */}
-          {product.option_groups.map((group) => (
-            <div key={group.id} className="option-section">
-              <h3 className="option-section-title">
-                {getLocalizedName(group)}
+          {/* Right Side - Content */}
+          <div className="product-modal-right">
+            <div className="product-modal-header">
+              <h2 className="product-modal-title">{getLocalizedName(product)}</h2>
+              <div className="product-modal-price">{product.base_price} ₸</div>
+            </div>
+
+            <div className="product-modal-body">
+              {/* Product Description */}
+              {getLocalizedDescription(product) && (
+                <p className="product-modal-description">{getLocalizedDescription(product)}</p>
+              )}
+
+              {/* Option Groups */}
+              {product.option_groups.map((group) => (
+                <div key={group.id} className="option-section">
+                  <h3 className="option-section-title">
+                    {getLocalizedName(group)}
                 {group.is_required && <span className="required-badge">*</span>}
               </h3>
               <div className="options-grid">
@@ -173,33 +142,36 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
             </div>
           ))}
 
-          {/* Quantity Selector */}
-          <div className="quantity-section">
-            <h3 className="option-section-title">
-              {language === 'rus' ? 'Количество' : language === 'kaz' ? 'Саны' : 'Quantity'}
-            </h3>
-            <div className="quantity-controls">
-              <button
-                className="quantity-btn"
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              >
-                −
-              </button>
-              <span className="quantity-value">{quantity}</span>
-              <button
-                className="quantity-btn"
-                onClick={() => setQuantity(quantity + 1)}
-              >
-                +
+              {/* Quantity Selector */}
+              <div className="quantity-section">
+                <h3 className="option-section-title">
+                  {language === 'rus' ? 'Количество' : language === 'kaz' ? 'Саны' : 'Quantity'}
+                </h3>
+                <div className="quantity-controls">
+                  <button
+                    className="quantity-btn"
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  >
+                    −
+                  </button>
+                  <span className="quantity-value">{quantity}</span>
+                  <button
+                    className="quantity-btn"
+                    onClick={() => setQuantity(quantity + 1)}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer with Add Button */}
+            <div className="product-modal-footer">
+              <button className="btn btn-primary btn-full btn-large" onClick={handleAddToCart}>
+                {language === 'rus' ? 'В корзину' : language === 'kaz' ? 'Себетке' : 'Add to cart'} · {calculateTotalPrice()} ₸
               </button>
             </div>
           </div>
-        </div>
-
-        <div className="modal-footer">
-          <button className="btn btn-primary btn-full" onClick={handleAddToCart}>
-            {language === 'rus' ? 'Добавить' : language === 'kaz' ? 'Қосу' : 'Add'} · {calculateTotalPrice()} ₸
-          </button>
         </div>
       </div>
     </div>

@@ -44,7 +44,6 @@ const HomePage: React.FC = () => {
     switch (language) {
       case 'rus': return item.name_rus;
       case 'kaz': return item.name_kaz;
-      case 'eng': return item.name_eng;
       default: return item.name_rus;
     }
   };
@@ -69,7 +68,6 @@ const HomePage: React.FC = () => {
             >
               <option value="rus">Русский</option>
               <option value="kaz">Қазақ</option>
-              <option value="eng">English</option>
             </select>
             {user ? (
               <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>

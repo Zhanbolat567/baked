@@ -95,8 +95,8 @@ export const useCartStore = create<CartState>()(
 );
 
 interface AppState {
-  language: 'rus' | 'kaz' | 'eng';
-  setLanguage: (lang: 'rus' | 'kaz' | 'eng') => void;
+  language: 'rus' | 'kaz';
+  setLanguage: (lang: 'rus' | 'kaz') => void;
 }
 
 export const useAppStore = create<AppState>()(

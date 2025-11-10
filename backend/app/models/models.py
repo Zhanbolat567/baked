@@ -55,7 +55,6 @@ class Category(Base):
     id = Column(Integer, primary_key=True, index=True)
     name_rus = Column(String(100), nullable=False)
     name_kaz = Column(String(100), nullable=False)
-    name_eng = Column(String(100), nullable=False)
     order = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -72,10 +71,8 @@ class Product(Base):
     category_id = Column(Integer, ForeignKey('categories.id', ondelete='CASCADE'))
     name_rus = Column(String(100), nullable=False)
     name_kaz = Column(String(100), nullable=False)
-    name_eng = Column(String(100), nullable=False)
     description_rus = Column(Text)
     description_kaz = Column(Text)
-    description_eng = Column(Text)
     base_price = Column(Float, nullable=False)
     image_url = Column(Text)  # Changed from String(255) to Text to support base64 images
     status = Column(SQLEnum(ProductStatus), default=ProductStatus.ACTIVE)
@@ -94,7 +91,6 @@ class OptionGroup(Base):
     id = Column(Integer, primary_key=True, index=True)
     name_rus = Column(String(100), nullable=False)
     name_kaz = Column(String(100), nullable=False)
-    name_eng = Column(String(100), nullable=False)
     is_required = Column(Boolean, default=False)
     is_multiple = Column(Boolean, default=False)  # Can select multiple options
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -111,7 +107,6 @@ class Option(Base):
     group_id = Column(Integer, ForeignKey('option_groups.id', ondelete='CASCADE'))
     name_rus = Column(String(100), nullable=False)
     name_kaz = Column(String(100), nullable=False)
-    name_eng = Column(String(100), nullable=False)
     price = Column(Float, default=0)
     is_available = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -130,6 +125,16 @@ class Order(Base):
     status = Column(SQLEnum(OrderStatus), default=OrderStatus.PENDING)
     payment_token = Column(String(255))  # Kaspi QR token
     payment_url = Column(String(500))
+    
+    # Delivery information
+    delivery_type = Column(String(50), default='pickup')  # 'delivery', 'pickup', 'dine_in'
+    delivery_address = Column(Text)  # Full address
+    delivery_apartment = Column(String(20))  # Apartment number
+    delivery_entrance = Column(String(20))  # Entrance number
+    delivery_floor = Column(String(20))  # Floor number
+    delivery_latitude = Column(Float)  # GPS coordinates
+    delivery_longitude = Column(Float)  # GPS coordinates
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     completed_at = Column(DateTime(timezone=True))

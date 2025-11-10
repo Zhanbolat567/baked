@@ -2,39 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store';
 import api from '../../services/api';
-import { Category, Product, OptionGroup, ProductStatus } from '../../types';
+import { Category, Product } from '../../types';
 import AdminSidebar from '../../components/admin/AdminSidebar';
-import AdminProductModal from '../../components/admin/AdminProductModal';
-
-type ProductFormState = {
-  name_rus: string;
-  name_kaz: string;
-  name_eng: string;
-  description_rus: string;
-  description_kaz: string;
-  description_eng: string;
-  base_price: number;
-  image_url: string;
-  status: ProductStatus;
-  option_group_ids: number[];
-  category_id: number | null;
-};
 
 type ProductFilterKey = 'all' | number;
-
-const defaultProductForm: ProductFormState = {
-  name_rus: '',
-  name_kaz: '',
-  name_eng: '',
-  description_rus: '',
-  description_kaz: '',
-  description_eng: '',
-  base_price: 0,
-  image_url: '',
-  status: 'active',
-  option_group_ids: [],
-  category_id: null,
-};
 
 const Products: React.FC = () => {
   const navigate = useNavigate();
@@ -43,14 +14,10 @@ const Products: React.FC = () => {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [optionGroups, setOptionGroups] = useState<OptionGroup[]>([]);
-  const [productForm, setProductForm] = useState<ProductFormState>(defaultProductForm);
-  const [editingProductId, setEditingProductId] = useState<number | null>(null);
   const [productFilterCategoryId, setProductFilterCategoryId] = useState<number | 'all'>('all');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
 
   useEffect(() => {
     if (!isAdminUser) {
@@ -61,20 +28,14 @@ const Products: React.FC = () => {
     const loadData = async () => {
       setLoading(true);
       try {
-        const [categoryData, optionGroupData, productData] = await Promise.all([
+        const [categoryData, productData] = await Promise.all([
           api.getCategories(),
-          api.getOptionGroups(),
           api.getProducts(),
         ]);
 
         setCategories(categoryData);
-        setOptionGroups(optionGroupData);
         setProducts(productData);
         setProductFilterCategoryId('all');
-
-        if (categoryData.length > 0) {
-          setProductForm((prev) => ({ ...prev, category_id: prev.category_id ?? categoryData[0].id }));
-        }
       } catch (err: any) {
         console.error('Failed to load data', err);
         setError(err.response?.data?.detail || 'Не удалось загрузить данные');
@@ -101,13 +62,6 @@ const Products: React.FC = () => {
     setSuccess(null);
   };
 
-  const getDefaultProductCategoryId = () => {
-    if (productFilterCategoryId !== 'all') {
-      return productFilterCategoryId;
-    }
-    return categories[0]?.id ?? null;
-  };
-
   const filteredProducts = useMemo(() => {
     if (productFilterCategoryId === 'all') {
       return products;
@@ -125,66 +79,12 @@ const Products: React.FC = () => {
     }
   };
 
-  const handleProductSubmit = async (data: ProductFormState) => {
-    if (!data.category_id) {
-      setError('Выберите категорию для товара');
-      return;
-    }
-
-    resetMessages();
-
-    const payload = {
-      ...data,
-      category_id: data.category_id,
-      base_price: Number(data.base_price),
-      option_group_ids: data.option_group_ids,
-    } as any;
-
-    try {
-      if (editingProductId) {
-        await api.updateProduct(editingProductId, payload);
-        setSuccess('Товар обновлен');
-      } else {
-        await api.createProduct(payload);
-        setSuccess('Товар создан');
-      }
-
-      const filterId = productFilterCategoryId === 'all' ? undefined : productFilterCategoryId;
-      await loadProducts(filterId as number | undefined);
-      setIsProductModalOpen(false);
-      setEditingProductId(null);
-      setProductForm({ ...defaultProductForm, category_id: getDefaultProductCategoryId() });
-    } catch (err: any) {
-      console.error('Failed to submit product', err);
-      setError(err.response?.data?.detail || 'Не удалось сохранить товар');
-      throw err;
-    }
-  };
-
   const handleEditProduct = (product: Product) => {
-    setEditingProductId(product.id);
-    setProductForm({
-      name_rus: product.name_rus,
-      name_kaz: product.name_kaz,
-      name_eng: product.name_eng,
-      description_rus: product.description_rus || '',
-      description_kaz: product.description_kaz || '',
-      description_eng: product.description_eng || '',
-      base_price: product.base_price,
-      image_url: product.image_url || '',
-      status: product.status,
-      option_group_ids: product.option_groups.map((group) => group.id),
-      category_id: product.category_id,
-    });
-    setIsProductModalOpen(true);
-    resetMessages();
+    navigate(`/admin/products/edit/${product.id}`);
   };
 
   const handleAddProduct = () => {
-    setEditingProductId(null);
-    setProductForm({ ...defaultProductForm, category_id: getDefaultProductCategoryId() });
-    setIsProductModalOpen(true);
-    resetMessages();
+    navigate('/admin/products/new');
   };
 
   const handleDeleteProduct = async (productId: number) => {
@@ -277,20 +177,6 @@ const Products: React.FC = () => {
           </div>
         </section>
       </div>
-
-      {/* Product Modal */}
-      <AdminProductModal
-        isOpen={isProductModalOpen}
-        onClose={() => {
-          setIsProductModalOpen(false);
-          setEditingProductId(null);
-        }}
-        onSubmit={handleProductSubmit}
-        categories={categories}
-        optionGroups={optionGroups}
-        initialData={productForm}
-        editingProductId={editingProductId}
-      />
     </div>
   );
 };

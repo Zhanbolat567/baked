@@ -35,7 +35,6 @@ class Token(BaseModel):
 class CategoryBase(BaseModel):
     name_rus: str
     name_kaz: str
-    name_eng: str
     order: int = 0
     is_active: bool = True
 
@@ -45,7 +44,6 @@ class CategoryCreate(CategoryBase):
 class CategoryUpdate(BaseModel):
     name_rus: Optional[str] = None
     name_kaz: Optional[str] = None
-    name_eng: Optional[str] = None
     order: Optional[int] = None
     is_active: Optional[bool] = None
 
@@ -60,7 +58,6 @@ class CategoryResponse(CategoryBase):
 class OptionBase(BaseModel):
     name_rus: str
     name_kaz: str
-    name_eng: str
     price: float = 0
     is_available: bool = True
 
@@ -78,7 +75,6 @@ class OptionResponse(OptionBase):
 class OptionGroupBase(BaseModel):
     name_rus: str
     name_kaz: str
-    name_eng: str
     is_required: bool = False
     is_multiple: bool = False
 
@@ -97,10 +93,8 @@ class ProductBase(BaseModel):
     category_id: int
     name_rus: str
     name_kaz: str
-    name_eng: str
     description_rus: Optional[str] = None
     description_kaz: Optional[str] = None
-    description_eng: Optional[str] = None
     base_price: float
     image_url: Optional[str] = None
     status: ProductStatus = ProductStatus.ACTIVE
@@ -112,10 +106,8 @@ class ProductUpdate(BaseModel):
     category_id: Optional[int] = None
     name_rus: Optional[str] = None
     name_kaz: Optional[str] = None
-    name_eng: Optional[str] = None
     description_rus: Optional[str] = None
     description_kaz: Optional[str] = None
-    description_eng: Optional[str] = None
     base_price: Optional[float] = None
     image_url: Optional[str] = None
     status: Optional[ProductStatus] = None
@@ -134,7 +126,6 @@ class MenuCategory(BaseModel):
     id: int
     name_rus: str
     name_kaz: str
-    name_eng: str
     order: int
     products: List[ProductResponse] = []
 
@@ -166,6 +157,13 @@ class OrderItemResponse(BaseModel):
 # Order Schemas
 class OrderCreate(BaseModel):
     items: List[OrderItemCreate]
+    delivery_type: Optional[str] = 'pickup'  # 'delivery', 'pickup', 'dine_in'
+    delivery_address: Optional[str] = None
+    delivery_apartment: Optional[str] = None
+    delivery_entrance: Optional[str] = None
+    delivery_floor: Optional[str] = None
+    delivery_latitude: Optional[float] = None
+    delivery_longitude: Optional[float] = None
 
 class OrderResponse(BaseModel):
     id: int
@@ -175,6 +173,13 @@ class OrderResponse(BaseModel):
     status: OrderStatus
     payment_token: Optional[str] = None
     payment_url: Optional[str] = None
+    delivery_type: Optional[str] = None
+    delivery_address: Optional[str] = None
+    delivery_apartment: Optional[str] = None
+    delivery_entrance: Optional[str] = None
+    delivery_floor: Optional[str] = None
+    delivery_latitude: Optional[float] = None
+    delivery_longitude: Optional[float] = None
     created_at: datetime
     items: List[OrderItemResponse] = []
     

@@ -8,7 +8,6 @@ import AdminSidebar from '../../components/admin/AdminSidebar';
 type OptionGroupFormState = {
   name_rus: string;
   name_kaz: string;
-  name_eng: string;
   is_required: boolean;
   is_multiple: boolean;
 };
@@ -16,7 +15,6 @@ type OptionGroupFormState = {
 type OptionFormState = {
   name_rus: string;
   name_kaz: string;
-  name_eng: string;
   price: number;
   is_available: boolean;
 };
@@ -24,7 +22,6 @@ type OptionFormState = {
 const defaultGroupForm: OptionGroupFormState = {
   name_rus: '',
   name_kaz: '',
-  name_eng: '',
   is_required: false,
   is_multiple: false,
 };
@@ -32,7 +29,6 @@ const defaultGroupForm: OptionGroupFormState = {
 const defaultOptionForm: OptionFormState = {
   name_rus: '',
   name_kaz: '',
-  name_eng: '',
   price: 0,
   is_available: true,
 };
@@ -103,7 +99,6 @@ const Options: React.FC = () => {
         group_id: groupId,
         name_rus: formState.name_rus,
         name_kaz: formState.name_kaz,
-        name_eng: formState.name_eng,
         price: Number(formState.price),
         is_available: formState.is_available,
       });
@@ -183,15 +178,6 @@ const Options: React.FC = () => {
                     required
                     value={groupForm.name_kaz}
                     onChange={(e) => setGroupForm({ ...groupForm, name_kaz: e.target.value })}
-                  />
-                </label>
-                <label>
-                  Название (eng)
-                  <input
-                    type="text"
-                    required
-                    value={groupForm.name_eng}
-                    onChange={(e) => setGroupForm({ ...groupForm, name_eng: e.target.value })}
                   />
                 </label>
                 <label className="admin-checkbox">
@@ -274,20 +260,6 @@ const Options: React.FC = () => {
                               setOptionForms((prev) => ({
                                 ...prev,
                                 [group.id]: { ...formState, name_kaz: e.target.value },
-                              }))
-                            }
-                          />
-                        </label>
-                        <label>
-                          Название (eng)
-                          <input
-                            type="text"
-                            required
-                            value={formState.name_eng}
-                            onChange={(e) =>
-                              setOptionForms((prev) => ({
-                                ...prev,
-                                [group.id]: { ...formState, name_eng: e.target.value },
                               }))
                             }
                           />
