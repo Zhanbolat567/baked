@@ -11,6 +11,7 @@ export interface User {
   bonus_points: number;
   is_active: boolean;
   created_at: string;
+  avatar_url?: string | null;
 }
 
 export interface Option {
@@ -79,5 +80,27 @@ export interface Category {
   order: number;
   is_active: boolean;
   created_at: string;
+}
+
+export interface DashboardStats {
+  today_sales: number;
+  monthly_sales: number;
+  total_orders_today: number;
+  total_orders_month: number;
+  active_orders: number;
+}
+
+export interface PickupLocation {
+  id: number;
+  title: string;
+  address: string;
+  working_hours: string;
+  phone?: string | null;
+  latitude: number;
+  longitude: number;
+  is_active: boolean;
+  display_order: number;
+  created_at: string;
+  updated_at?: string | null;
 }
 

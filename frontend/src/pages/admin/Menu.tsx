@@ -500,15 +500,6 @@ const Menu: React.FC = () => {
               />
             </label>
             <label>
-              Название (eng)
-              <input
-                type="text"
-                required
-                value={categoryForm.name_eng}
-                onChange={(e) => setCategoryForm({ ...categoryForm, name_eng: e.target.value })}
-              />
-            </label>
-            <label>
               Порядок
               <input
                 type="number"
@@ -620,15 +611,6 @@ const Menu: React.FC = () => {
                 onChange={(e) => setGroupForm({ ...groupForm, name_kaz: e.target.value })}
               />
             </label>
-            <label>
-              Название (eng)
-              <input
-                type="text"
-                required
-                value={groupForm.name_eng}
-                onChange={(e) => setGroupForm({ ...groupForm, name_eng: e.target.value })}
-              />
-            </label>
             <label className="admin-checkbox">
               <input
                 type="checkbox"
@@ -701,18 +683,6 @@ const Menu: React.FC = () => {
                         onChange={(e) => setOptionForms((prev) => ({
                           ...prev,
                           [group.id]: { ...formState, name_kaz: e.target.value },
-                        }))}
-                      />
-                    </label>
-                    <label>
-                      Название (eng)
-                      <input
-                        type="text"
-                        required
-                        value={formState.name_eng}
-                        onChange={(e) => setOptionForms((prev) => ({
-                          ...prev,
-                          [group.id]: { ...formState, name_eng: e.target.value },
                         }))}
                       />
                     </label>

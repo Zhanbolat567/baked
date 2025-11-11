@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 from app.models.models import (
     User, UserRole, Category, Product, ProductStatus,
-    OptionGroup, Option
+    OptionGroup, Option, PickupLocation
 )
 from app.core.security import get_password_hash
 
@@ -226,6 +226,61 @@ def create_products(db: Session):
     db.commit()
     print("✅ Sample products created")
 
+
+def create_pickup_locations(db: Session):
+    """Create default pickup locations."""
+
+    existing = db.query(PickupLocation).first()
+    if existing:
+        print("ℹ️  Pickup locations already exist")
+        return
+
+    locations = [
+        {
+            "title": "Астана, Казахстан, улица Ханов Керея и Жанибека, 28",
+            "address": "Астана, Казахстан, улица Ханов Керея и Жанибека, 28",
+            "working_hours": "10:00 — 22:20",
+            "phone": "+7 (700) 000-00-00",
+            "latitude": 51.1289,
+            "longitude": 71.4306,
+            "display_order": 1,
+        },
+        {
+            "title": "Астана, ул. Азербайжана Мамбетова, 16",
+            "address": "Астана, улица Азербайжана Мамбетова, 16",
+            "working_hours": "10:00 — 22:20",
+            "phone": "+7 (700) 000-00-01",
+            "latitude": 51.1305,
+            "longitude": 71.4237,
+            "display_order": 2,
+        },
+        {
+            "title": "Астана, ул. Д. Кунаева, 14",
+            "address": "Астана, улица Д. Кунаева, 14",
+            "working_hours": "10:00 — 22:20",
+            "phone": "+7 (700) 000-00-02",
+            "latitude": 51.1266,
+            "longitude": 71.4338,
+            "display_order": 3,
+        },
+        {
+            "title": "Университет MNU",
+            "address": "Астана, Университет MNU",
+            "working_hours": "08:00 — 19:00",
+            "phone": "+7 (700) 000-00-03",
+            "latitude": 51.0954,
+            "longitude": 71.4023,
+            "display_order": 4,
+        },
+    ]
+
+    for data in locations:
+        location = PickupLocation(**data)
+        db.add(location)
+
+    db.commit()
+    print("✅ Pickup locations created")
+
 def seed_database():
     """Main seed function"""
     print("🌱 Starting database seed...")
@@ -236,6 +291,7 @@ def seed_database():
         create_option_groups(db)
         create_categories(db)
         create_products(db)
+        create_pickup_locations(db)
         print("✅ Database seeded successfully!")
     except Exception as e:
         print(f"❌ Error seeding database: {e}")

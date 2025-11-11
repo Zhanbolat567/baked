@@ -169,17 +169,6 @@ const AdminProductModal: React.FC<AdminProductModalProps> = ({
                   />
                 </label>
 
-                <label className="form-label">
-                  Название (eng)
-                  <input
-                    type="text"
-                    className="form-input"
-                    required
-                    value={formData.name_eng}
-                    onChange={(e) => setFormData({ ...formData, name_eng: e.target.value })}
-                  />
-                </label>
-
                 <div className="form-row">
                   <label className="form-label">
                     Цена (₸)

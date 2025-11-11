@@ -1,10 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Menu, Product, CartItemOption } from '../types';
 import { useAppStore, useCartStore, useAuthStore } from '../store';
 import api from '../services/api';
 import ProductModal from '../components/ProductModal';
 import CartModal from '../components/CartModal';
 import AuthModal from '../components/AuthModal';
+import { API_URL } from '../config/constants';
+
+const resolveAvatarUrl = (url?: string | null): string | null => {
+  if (!url) {
+    return null;
+  }
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  if (url.startsWith('/')) {
+    return `${API_URL}${url}`;
+  }
+  return `${API_URL}/${url}`;
+};
+
+const getInitials = (firstName?: string | null, lastName?: string | null): string => {
+  const first = firstName?.trim()?.[0];
+  const last = lastName?.trim()?.[0];
+  const combined = `${first ?? ''}${last ?? ''}`.trim();
+  return combined ? combined.toUpperCase() : 'A';
+};
 
 const HomePage: React.FC = () => {
   const [menu, setMenu] = useState<Menu | null>(null);
@@ -13,13 +35,34 @@ const HomePage: React.FC = () => {
   const [showCart, setShowCart] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
+  const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
 
+  const navigate = useNavigate();
   const language = useAppStore((state) => state.language);
+  const setLanguage = useAppStore((state) => state.setLanguage);
   const cart = useCartStore();
   const { user, logout } = useAuthStore();
 
+  const languageDropdownRef = useRef<HTMLDivElement | null>(null);
+
+  const userAvatarUrl = user ? resolveAvatarUrl(user.avatar_url) : null;
+  const userInitials = user ? getInitials(user.first_name, user.last_name) : 'A';
+
   useEffect(() => {
     loadMenu();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (languageDropdownRef.current && !languageDropdownRef.current.contains(event.target as Node)) {
+        setIsLanguageMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const loadMenu = async () => {
@@ -48,6 +91,18 @@ const HomePage: React.FC = () => {
     }
   };
 
+  const languageOptions: Array<{ value: 'rus' | 'kaz'; label: string }> = [
+    { value: 'rus', label: 'Русский' },
+    { value: 'kaz', label: 'Қазақ' },
+  ];
+
+  const currentLanguageLabel = languageOptions.find((option) => option.value === language)?.label ?? 'Русский';
+
+  const handleLanguageSelect = (value: 'rus' | 'kaz') => {
+    setLanguage(value);
+    setIsLanguageMenuOpen(false);
+  };
+
   if (loading) {
     return <div className="container" style={{padding: '100px 0', textAlign: 'center'}}>
       <h2>Загрузка меню...</h2>
@@ -61,18 +116,49 @@ const HomePage: React.FC = () => {
         <div className="container header-content">
           <div className="logo">Social</div>
           <div className="header-actions">
-            <select 
-              className="language-selector"
-              value={language}
-              onChange={(e) => useAppStore.getState().setLanguage(e.target.value as any)}
-            >
-              <option value="rus">Русский</option>
-              <option value="kaz">Қазақ</option>
-            </select>
+            <div className="language-dropdown" ref={languageDropdownRef}>
+              <button
+                type="button"
+                className={`language-dropdown-toggle ${isLanguageMenuOpen ? 'open' : ''}`}
+                onClick={() => setIsLanguageMenuOpen((prev: boolean) => !prev)}
+              >
+                <span>{currentLanguageLabel}</span>
+                <svg className="language-dropdown-icon" viewBox="0 0 12 8" aria-hidden="true">
+                  <path d="M1 2l5 4 5-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              {isLanguageMenuOpen && (
+                <div className="language-dropdown-menu">
+                  {languageOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={`language-dropdown-item ${language === option.value ? 'active' : ''}`}
+                      onClick={() => handleLanguageSelect(option.value)}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             {user ? (
-              <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
-                <span>{user.first_name} ({user.bonus_points} ⭐)</span>
+              <div className="header-user">
+                <button
+                  type="button"
+                  className="header-avatar header-avatar-button"
+                  title={`${user.first_name ?? ''} ${user.last_name ?? ''}`.trim()}
+                  onClick={() => navigate('/settings')}
+                >
+                  {userAvatarUrl ? (
+                    <img src={userAvatarUrl} alt={`${user.first_name ?? 'Пользователь'} аватар`} />
+                  ) : (
+                    <span className="header-avatar-initial">{userInitials}</span>
+                  )}
+                </button>
+                <div className="header-user-buttons">
                 <button className="login-btn" onClick={logout}>Выйти</button>
+                </div>
               </div>
             ) : (
               <button className="login-btn" onClick={() => setShowAuth(true)}>

@@ -6,62 +6,30 @@ type NavItem = {
   label: string;
   path: string;
   icon: React.ReactNode;
-  children?: NavItem[];
 };
 
 const navItems: NavItem[] = [
   {
-    label: 'Dashboard',
-    path: '/admin',
+    label: 'Категории',
+    path: '/admin/categories',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="7" height="9" rx="1" />
-        <rect x="14" y="3" width="7" height="5" rx="1" />
-        <rect x="14" y="12" width="7" height="9" rx="1" />
-        <rect x="3" y="16" width="7" height="5" rx="1" />
+        <rect x="3" y="3" width="7" height="7" />
+        <rect x="14" y="3" width="7" height="7" />
+        <rect x="3" y="14" width="7" height="7" />
+        <rect x="14" y="14" width="7" height="7" />
       </svg>
     ),
   },
   {
-    label: 'Меню',
-    path: '/admin/menu',
+    label: 'Товары',
+    path: '/admin/products',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 3h18" />
-        <path d="M3 9h18" />
-        <path d="M3 15h18" />
-        <path d="M3 21h18" />
-      </svg>
-    ),
-    children: [
-      { label: 'Категории', path: '/admin/categories', icon: null },
-      { label: 'Товары', path: '/admin/products', icon: null },
-      { label: 'Опции', path: '/admin/options', icon: null },
-    ],
-  },
-  {
-    label: 'Заказы',
-    path: '/admin/orders',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 6h18" />
-        <path d="M3 12h18" />
-        <path d="M3 18h18" />
-        <path d="M7 6v12" />
-      </svg>
-    ),
-    children: [
-      { label: 'Активные', path: '/admin/orders?tab=active', icon: null },
-      { label: 'Закрытые', path: '/admin/orders?tab=closed', icon: null },
-    ],
-  },
-  {
-    label: 'Доставка',
-    path: '/admin/delivery-zones',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-        <circle cx="12" cy="10" r="3" />
+        <path d="M20 7h-9" />
+        <path d="M14 17H5" />
+        <circle cx="17" cy="17" r="3" />
+        <circle cx="7" cy="7" r="3" />
       </svg>
     ),
   },
@@ -87,10 +55,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = () => {
   const { logout } = useAuthStore();
 
   const handleNavigate = (path: string) => {
-    if (path === '/admin/settings') {
-      // Settings page not yet implemented
-      return;
-    }
     navigate(path);
   };
 
@@ -116,19 +80,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = () => {
               <span className="admin-sidebar__icon">{item.icon}</span>
               <span>{item.label}</span>
             </button>
-            {item.children && isActive(item.path) && (
-              <div className="admin-sidebar__sublinks">
-                {item.children.map((child) => (
-                  <button
-                    key={child.path}
-                    className={`admin-sidebar__sublink ${isActive(child.path) ? 'active' : ''}`}
-                    onClick={() => handleNavigate(child.path)}
-                  >
-                    {child.label}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         ))}
       </nav>

@@ -66,12 +66,14 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - VITE_2GIS_API_KEY=6c5e4e53-0171-4eec-a761-75a403b884b5
       # target: production  # <-- убрать или закомментировать!
     container_name: social_frontend
     depends_on:
       - backend
     ports:
-      - "3000:80"
+      - "80:80"
     networks:
       - social_network
     environment:

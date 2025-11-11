@@ -153,6 +153,90 @@ class ApiService {
     const response = await this.api.delete(`/admin/options/${id}`);
     return response.data;
   }
+
+  // Delivery Zones endpoints
+  async getDeliveryZones() {
+    const response = await this.api.get('/delivery-zones');
+    return response.data;
+  }
+
+  async createDeliveryZone(data: any) {
+    const response = await this.api.post('/delivery-zones', data);
+    return response.data;
+  }
+
+  async updateDeliveryZone(id: number, data: any) {
+    const response = await this.api.put(`/delivery-zones/${id}`, data);
+    return response.data;
+  }
+
+  async deleteDeliveryZone(id: number) {
+    const response = await this.api.delete(`/delivery-zones/${id}`);
+    return response.data;
+  }
+
+  // Pickup locations endpoints
+  async getPickupLocations() {
+    const response = await this.api.get('/pickup-locations');
+    return response.data;
+  }
+
+  async createPickupLocation(data: any) {
+    const response = await this.api.post('/pickup-locations', data);
+    return response.data;
+  }
+
+  async updatePickupLocation(id: number, data: any) {
+    const response = await this.api.put(`/pickup-locations/${id}`, data);
+    return response.data;
+  }
+
+  async deletePickupLocation(id: number) {
+    const response = await this.api.delete(`/pickup-locations/${id}`);
+    return response.data;
+  }
+
+  // Admin Settings endpoints
+  async getAdminProfile() {
+    const response = await this.api.get('/admin/profile');
+    return response.data;
+  }
+
+  async updateAdminProfile(data: { first_name?: string; last_name?: string; phone_number?: string }) {
+    const response = await this.api.put('/admin/profile', data);
+    return response.data;
+  }
+
+  async updateAdminAvatar(data: { avatar_base64: string }) {
+    const response = await this.api.put('/admin/profile/avatar', data);
+    return response.data;
+  }
+
+  async updateAdminPassword(data: { current_password: string; new_password: string }) {
+    const response = await this.api.put('/admin/profile/password', data);
+    return response.data;
+  }
+
+  // User profile endpoints
+  async getUserProfile() {
+    const response = await this.api.get('/profile');
+    return response.data;
+  }
+
+  async updateUserProfile(data: { first_name?: string; last_name?: string; phone_number?: string }) {
+    const response = await this.api.put('/profile', data);
+    return response.data;
+  }
+
+  async updateUserAvatar(data: { avatar_base64: string }) {
+    const response = await this.api.put('/profile/avatar', data);
+    return response.data;
+  }
+
+  async updateUserPassword(data: { current_password: string; new_password: string }) {
+    const response = await this.api.put('/profile/password', data);
+    return response.data;
+  }
 }
 
 export default new ApiService();

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Table, Text, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Table, Text, Enum as SQLEnum, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.base import Base
@@ -39,6 +39,7 @@ class User(Base):
     last_name = Column(String(100), nullable=False)
     phone_number = Column(String(20), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
+    avatar_url = Column(Text)
     role = Column(SQLEnum(UserRole), default=UserRole.CLIENT, nullable=False)
     bonus_points = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
@@ -172,3 +173,35 @@ class OrderItemOption(Base):
     
     # Relationships
     order_item = relationship("OrderItem", back_populates="selected_options")
+
+
+# Delivery Zone Model
+class DeliveryZone(Base):
+    __tablename__ = "delivery_zones"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    color = Column(String(20), nullable=False)  # HEX color code
+    coordinates = Column(JSON, nullable=False)  # Array of [lat, lng] points
+    delivery_fee = Column(Float, nullable=False)
+    min_order = Column(Float, nullable=False)
+    estimated_time = Column(String(50), nullable=False)  # e.g., "30-40 мин"
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+class PickupLocation(Base):
+    __tablename__ = "pickup_locations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(150), nullable=False)
+    address = Column(Text, nullable=False)
+    working_hours = Column(String(100), nullable=False)
+    phone = Column(String(30))
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    is_active = Column(Boolean, default=True)
+    display_order = Column(Integer, default=0)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())

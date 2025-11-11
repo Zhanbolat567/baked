@@ -28,6 +28,20 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "  - delivery_floor" -ForegroundColor White
     Write-Host "  - delivery_latitude" -ForegroundColor White
     Write-Host "  - delivery_longitude" -ForegroundColor White
+    Write-Host "`nApplying pickup locations migration..." -ForegroundColor Cyan
+    Get-Content add_pickup_locations.sql | docker exec -i social_db psql -U social_user -d social_db
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "`nSuccess! pickup_locations table is ready." -ForegroundColor Green
+        Write-Host "`nApplying user avatar migration..." -ForegroundColor Cyan
+        Get-Content add_user_avatar.sql | docker exec -i social_db psql -U social_user -d social_db
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "`nSuccess! avatar_url column is ready." -ForegroundColor Green
+        } else {
+            Write-Host "`nWarning: Failed to add avatar_url column." -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "`nWarning: Failed to create pickup_locations table." -ForegroundColor Yellow
+    }
 } else {
     Write-Host "`nError: Failed to apply migration!" -ForegroundColor Red
     exit 1

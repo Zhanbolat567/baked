@@ -17,6 +17,9 @@ interface DeliveryMapModalProps {
   readOnly?: boolean;
 }
 
+const MAP_IFRAME_SRC =
+  'https://makemap.2gis.ru/widget?data=eJyFkNFqgzAUht_l7DaUGBNjhF2UwcrGYGU3hRUvnEnbsNRITGFOfPdFnTJWxrzzOyeH7_87sE4qp-RG2bPyTqsGsn0Hvq0VZHCvCn9xChDUztbK-XHegVRN6XTtta3CVhg33tl3dWeNdQHcUPnGCVv4Tkt_gozM_891UWrfQhYhOGhjlncJk0ksYKLLFl4xBJ8PlVQf4UmP4DjJtoPKt-nWmvYYbBCUNkTSVeHHKPs9j1YUp5jGiEWrKOY4TXI00DjhhE-UUowXSlKRTLuEswlSTBmhIyQci4X-OpvnQU5LyITgPfq3Ra-9Geb4MX45is0aP61vw9JVueVcDyZpdCDwoww8f3-1oit_1cmQkjMmxKQuMCOzeIRT2ucIzkW9tY2eHDowhYdsykkoZyQmIokwRWCG-XBPhMg0JUSIFCdB0NpzuEbD2RDGGrM7KWVeR-rdRfVfUpC62g';
+
 const DeliveryMapModal: React.FC<DeliveryMapModalProps> = ({
   isOpen,
   onClose,
@@ -76,15 +79,15 @@ const DeliveryMapModal: React.FC<DeliveryMapModalProps> = ({
 
             {/* Map Container */}
             <div className="delivery-map-container">
-              <div className="delivery-map-placeholder">
-                <div className="delivery-map-marker">📍</div>
-                <p className="delivery-map-location">{address.address}</p>
-                <div className="delivery-map-zones">
-                  <div className="delivery-zone delivery-zone--blue"></div>
-                  <div className="delivery-zone delivery-zone--green"></div>
-                  <div className="delivery-zone delivery-zone--purple"></div>
-                </div>
-              </div>
+              <iframe
+                src={MAP_IFRAME_SRC}
+                title="Карта доставки 2ГИС"
+                style={{ width: '100%', height: '100%', border: 'none', borderRadius: '16px' }}
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                sandbox="allow-modals allow-forms allow-scripts allow-same-origin allow-popups allow-top-navigation-by-user-activation"
+              />
             </div>
 
             {/* Address Details Grid */}

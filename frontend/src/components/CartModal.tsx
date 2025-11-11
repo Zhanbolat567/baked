@@ -1,22 +1,27 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useAppStore, useCartStore, useAuthStore } from '../store';
 import PaymentModal from './PaymentModal';
 import OrderModal from './OrderModal';
 import DeliveryModal, { DeliveryAddress } from './DeliveryModal';
-import api from '../services/api';
 import './components.css';
+import { PickupLocation } from '../types';
+import api from '../services/api';
 
 interface CartModalProps {
   onClose: () => void;
 }
 
-const CartModal: React.FC<CartModalProps> = ({ onClose }) => {
-  const language = useAppStore((state) => state.language);
+const CartModal: React.FC<CartModalProps> = (props: CartModalProps) => {
+  const { onClose } = props;
+  const language = useAppStore((state: any) => state.language);
   const cart = useCartStore();
   const { user } = useAuthStore();
   const [showPayment, setShowPayment] = useState(false);
   const [orderType, setOrderType] = useState<'delivery' | 'pickup'>('delivery');
-  const [pickupAddress, setPickupAddress] = useState('Астана, Казахстан, улица Ханов Керея ...');
+  const [pickupLocations, setPickupLocations] = useState<PickupLocation[]>([]);
+  const [pickupLoading, setPickupLoading] = useState(false);
+  const [pickupError, setPickupError] = useState<string | null>(null);
+  const [selectedPickupId, setSelectedPickupId] = useState<number | null>(null);
   const [clientName, setClientName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
@@ -24,7 +29,6 @@ const CartModal: React.FC<CartModalProps> = ({ onClose }) => {
   const [deliveryData, setDeliveryData] = useState<DeliveryAddress | null>(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [orderComment, setOrderComment] = useState('');
-  const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderLoading, setOrderLoading] = useState(false);
 
   const getLocalizedName = (item: any) => {
@@ -47,44 +51,161 @@ const CartModal: React.FC<CartModalProps> = ({ onClose }) => {
     return translations[key]?.[language] || translations[key]?.['rus'] || key;
   };
 
-  const handleCheckout = () => {
-    if (cart.items.length === 0) return;
-    setShowPayment(true);
-  };
+  interface OrderFormData {
+    clientName: string;
+    clientPhone: string;
+    orderComment: string;
+  }
 
-  const handleOrderSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setOrderLoading(true);
-    try {
-      const orderData: any = {
-        type: orderType,
-        items: cart.items.map(item => ({
-          product_id: item.product.id,
-          quantity: item.quantity,
-          options: item.selected_options.map(opt => ({
-            group: opt.option_group_name,
-            name: opt.option_name,
-            price: opt.option_price,
-          })),
-        })),
-        comment: orderComment,
-        total: cart.getTotalAmount(),
-      };
-      if (orderType === 'pickup') {
-        orderData.address = pickupAddress;
-        orderData.client_name = clientName;
-        orderData.client_phone = clientPhone;
-      } else {
-        orderData.address = deliveryAddress;
-        orderData.client_name = clientName;
-        orderData.client_phone = clientPhone;
+  const selectedPickup = useMemo(() => {
+    if (!selectedPickupId) {
+      return null;
+    }
+  return pickupLocations.find((location: PickupLocation) => location.id === selectedPickupId) || null;
+  }, [selectedPickupId, pickupLocations]);
+
+  const pickupAddressSummary = useMemo(() => {
+    if (!selectedPickup) {
+      return '';
+    }
+    return `${selectedPickup.title} (${selectedPickup.address})`;
+  }, [selectedPickup]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const loadPickupLocations = async () => {
+      try {
+        setPickupLoading(true);
+        setPickupError(null);
+        const data = await api.getPickupLocations();
+        if (!ignore && Array.isArray(data)) {
+          const activeSorted = data
+            .filter((location: PickupLocation) => location.is_active)
+            .sort((a: PickupLocation, b: PickupLocation) => {
+              if (a.display_order !== b.display_order) {
+                return a.display_order - b.display_order;
+              }
+              return a.id - b.id;
+            });
+          setPickupLocations(activeSorted);
+          setSelectedPickupId((prev: number | null) => {
+            if (prev && activeSorted.some((location: PickupLocation) => location.id === prev)) {
+              return prev;
+            }
+            return activeSorted.length > 0 ? activeSorted[0].id : null;
+          });
+        }
+      } catch (err) {
+        console.error('Не удалось загрузить точки самовывоза', err);
+        if (!ignore) {
+          setPickupError('Не удалось загрузить точки самовывоза');
+        }
+      } finally {
+        if (!ignore) {
+          setPickupLoading(false);
+        }
       }
-      await api.createOrder(orderData);
+    };
+
+    loadPickupLocations();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const handleOrderSubmit = async ({ clientName, clientPhone, orderComment }: OrderFormData) => {
+    if (orderLoading) return;
+
+    const trimmedName = clientName.trim();
+    const trimmedPhone = clientPhone.trim();
+    const trimmedComment = orderComment.trim();
+
+    if (!trimmedName || !trimmedPhone) {
+      alert('Укажите имя и телефон');
+      return;
+    }
+
+    if (orderType === 'delivery' && !deliveryData) {
+      alert('Пожалуйста, выберите адрес доставки');
+      return;
+    }
+
+    if (orderType === 'pickup' && !selectedPickup) {
+      alert('Пожалуйста, выберите точку самовывоза');
+      return;
+    }
+
+    setClientName(trimmedName);
+    setClientPhone(trimmedPhone);
+    setOrderComment(trimmedComment);
+
+    setOrderLoading(true);
+
+    try {
+      const itemsLines = cart.items.map((item: any, index: number) => {
+        const baseName = item.product.name_rus || item.product.name_kaz || `Товар ${index + 1}`;
+        const optionsText = item.selected_options.length
+          ? ` (опции: ${item.selected_options.map((opt: any) => opt.option_name).join(', ')})`
+          : '';
+        return `${index + 1}. ${baseName} × ${item.quantity} = ${item.total_price} ₸${optionsText}`;
+      });
+
+      const lines: string[] = [
+        `Новый заказ (${orderType === 'delivery' ? 'Доставка' : 'Самовывоз'})`,
+        '',
+        'Товары:',
+        ...itemsLines,
+        `Итого: ${cart.getTotalAmount()} ₸`,
+        '',
+        `Имя: ${trimmedName}`,
+        `Телефон: ${trimmedPhone}`,
+      ];
+
+      if (orderType === 'delivery' && deliveryData) {
+        lines.push(`Адрес доставки: ${deliveryData.address}`);
+        const extraParts: string[] = [];
+        if (deliveryData.apartment) extraParts.push(`кв. ${deliveryData.apartment}`);
+        if (deliveryData.entrance) extraParts.push(`подъезд ${deliveryData.entrance}`);
+        if (deliveryData.floor) extraParts.push(`этаж ${deliveryData.floor}`);
+        if (extraParts.length) {
+          lines.push(`Детали: ${extraParts.join(', ')}`);
+        }
+      } else if (orderType === 'pickup' && selectedPickup) {
+        lines.push(`Адрес самовывоза: ${selectedPickup.title}`);
+        lines.push(`Полный адрес: ${selectedPickup.address}`);
+        if (selectedPickup.working_hours) {
+          lines.push(`Время работы: ${selectedPickup.working_hours}`);
+        }
+        if (selectedPickup.phone) {
+          lines.push(`Телефон точки: ${selectedPickup.phone}`);
+        }
+      }
+
+      if (trimmedComment) {
+        lines.push(`Комментарий: ${trimmedComment}`);
+      }
+
+      if (deliveryData?.comment && orderType === 'delivery' && deliveryData.comment !== trimmedComment) {
+        lines.push(`Комментарий (из адреса): ${deliveryData.comment}`);
+      }
+
+      const whatsappNumber = '77078126798';
+      const message = encodeURIComponent(lines.filter(Boolean).join('\n'));
+      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
+
+      const popup = window.open(whatsappUrl, '_blank');
+      if (!popup) {
+        window.location.href = whatsappUrl;
+      }
+
       cart.clearCart();
-      setOrderSuccess(true);
       setShowOrderModal(false);
+      onClose();
     } catch (err) {
-      alert('Ошибка при оформлении заказа');
+      console.error('Ошибка формирования заказа для WhatsApp:', err);
+      alert('Не удалось подготовить сообщение для WhatsApp');
     } finally {
       setOrderLoading(false);
     }
@@ -98,7 +219,7 @@ const CartModal: React.FC<CartModalProps> = ({ onClose }) => {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal cart-modal" onClick={(e) => e.stopPropagation()}>
+  <div className="modal cart-modal" onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}>
         <div className="modal-header">
           <h2 className="modal-title">{getText('cart')}</h2>
           <button className="modal-close" onClick={onClose}>×</button>
@@ -126,63 +247,182 @@ const CartModal: React.FC<CartModalProps> = ({ onClose }) => {
 
           {/* Самовывоз */}
           {cart.items.length > 0 && orderType === 'pickup' && (
-            <>
-              <div className="cart-address-block">
-                <span className="cart-address-label">{pickupAddress}</span>
+            <div className="cart-client-form">
+              <h3 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: 600 }}>Адрес самовывоза</h3>
+              
+              <div className="delivery-field-group">
+                <label className="delivery-field-label">Адрес *</label>
+                <input
+                  type="text"
+                  className="delivery-input-new"
+                  value={deliveryData?.address || ''}
+                  onChange={(e) => setDeliveryData(prev => ({ 
+                    ...prev, 
+                    address: e.target.value,
+                    name: prev?.name || '',
+                    phone: prev?.phone || '',
+                    apartment: prev?.apartment || '',
+                    entrance: prev?.entrance || '',
+                    floor: prev?.floor || '',
+                    comment: prev?.comment || ''
+                  }))}
+                  placeholder="Введите адрес самовывоза"
+                  required
+                />
               </div>
-              <div className="cart-client-form">
-                <label>
-                  Ваше имя
+
+              <div className="delivery-details-grid-new">
+                <div className="delivery-field-group">
+                  <label className="delivery-field-label">Квартира</label>
                   <input
                     type="text"
-                    value={clientName}
-                    onChange={e => setClientName(e.target.value)}
-                    placeholder="Введите имя"
+                    className="delivery-input-new"
+                    value={deliveryData?.apartment || ''}
+                    onChange={(e) => setDeliveryData(prev => ({ 
+                      ...prev, 
+                      apartment: e.target.value,
+                      address: prev?.address || '',
+                      name: prev?.name || '',
+                      phone: prev?.phone || '',
+                      entrance: prev?.entrance || '',
+                      floor: prev?.floor || '',
+                      comment: prev?.comment || ''
+                    }))}
+                    placeholder="№"
                   />
-                </label>
-                <label>
-                  Ваш номер телефона
+                </div>
+
+                <div className="delivery-field-group">
+                  <label className="delivery-field-label">Подъезд</label>
                   <input
-                    type="tel"
-                    value={clientPhone}
-                    onChange={e => setClientPhone(e.target.value)}
-                    placeholder="+7"
+                    type="text"
+                    className="delivery-input-new"
+                    value={deliveryData?.entrance || ''}
+                    onChange={(e) => setDeliveryData(prev => ({ 
+                      ...prev, 
+                      entrance: e.target.value,
+                      address: prev?.address || '',
+                      name: prev?.name || '',
+                      phone: prev?.phone || '',
+                      apartment: prev?.apartment || '',
+                      floor: prev?.floor || '',
+                      comment: prev?.comment || ''
+                    }))}
+                    placeholder="№"
                   />
-                </label>
+                </div>
+
+                <div className="delivery-field-group">
+                  <label className="delivery-field-label">Этаж</label>
+                  <input
+                    type="text"
+                    className="delivery-input-new"
+                    value={deliveryData?.floor || ''}
+                    onChange={(e) => setDeliveryData(prev => ({ 
+                      ...prev, 
+                      floor: e.target.value,
+                      address: prev?.address || '',
+                      name: prev?.name || '',
+                      phone: prev?.phone || '',
+                      apartment: prev?.apartment || '',
+                      entrance: prev?.entrance || '',
+                      comment: prev?.comment || ''
+                    }))}
+                    placeholder="№"
+                  />
+                </div>
               </div>
-            </>
+            </div>
           )}
 
           {/* Доставка */}
           {cart.items.length > 0 && orderType === 'delivery' && (
-            <>
-              <div className="cart-address-block">
-                {deliveryData ? (
-                  <div className="delivery-info-preview">
-                    <div className="delivery-preview-label">Адрес доставки:</div>
-                    <div className="delivery-preview-address">{deliveryData.address}</div>
-                    {(deliveryData.apartment || deliveryData.entrance || deliveryData.floor) && (
-                      <div className="delivery-preview-details">
-                        {deliveryData.apartment && `кв. ${deliveryData.apartment}`}
-                        {deliveryData.entrance && `, подъезд ${deliveryData.entrance}`}
-                        {deliveryData.floor && `, этаж ${deliveryData.floor}`}
-                      </div>
-                    )}
-                    <div className="delivery-preview-contact">
-                      <strong>{deliveryData.name}</strong> — {deliveryData.phone}
-                    </div>
-                  </div>
-                ) : (
-                  <span className="cart-address-label">Укажите адрес доставки</span>
-                )}
-                <button 
-                  className="btn btn-primary" 
-                  onClick={() => setShowDeliveryModal(true)}
-                >
-                  {deliveryData ? 'Изменить адрес' : 'Готово'}
-                </button>
+            <div className="cart-client-form">
+              <h3 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: 600 }}>Адрес доставки</h3>
+              
+              <div className="delivery-field-group">
+                <label className="delivery-field-label">Адрес *</label>
+                <input
+                  type="text"
+                  className="delivery-input-new"
+                  value={deliveryData?.address || ''}
+                  onChange={(e) => setDeliveryData(prev => ({ 
+                    ...prev, 
+                    address: e.target.value,
+                    name: prev?.name || '',
+                    phone: prev?.phone || '',
+                    apartment: prev?.apartment || '',
+                    entrance: prev?.entrance || '',
+                    floor: prev?.floor || '',
+                    comment: prev?.comment || ''
+                  }))}
+                  placeholder="Введите адрес доставки"
+                  required
+                />
               </div>
-            </>
+
+              <div className="delivery-details-grid-new">
+                <div className="delivery-field-group">
+                  <label className="delivery-field-label">Квартира</label>
+                  <input
+                    type="text"
+                    className="delivery-input-new"
+                    value={deliveryData?.apartment || ''}
+                    onChange={(e) => setDeliveryData(prev => ({ 
+                      ...prev, 
+                      apartment: e.target.value,
+                      address: prev?.address || '',
+                      name: prev?.name || '',
+                      phone: prev?.phone || '',
+                      entrance: prev?.entrance || '',
+                      floor: prev?.floor || '',
+                      comment: prev?.comment || ''
+                    }))}
+                    placeholder="№"
+                  />
+                </div>
+
+                <div className="delivery-field-group">
+                  <label className="delivery-field-label">Подъезд</label>
+                  <input
+                    type="text"
+                    className="delivery-input-new"
+                    value={deliveryData?.entrance || ''}
+                    onChange={(e) => setDeliveryData(prev => ({ 
+                      ...prev, 
+                      entrance: e.target.value,
+                      address: prev?.address || '',
+                      name: prev?.name || '',
+                      phone: prev?.phone || '',
+                      apartment: prev?.apartment || '',
+                      floor: prev?.floor || '',
+                      comment: prev?.comment || ''
+                    }))}
+                    placeholder="№"
+                  />
+                </div>
+
+                <div className="delivery-field-group">
+                  <label className="delivery-field-label">Этаж</label>
+                  <input
+                    type="text"
+                    className="delivery-input-new"
+                    value={deliveryData?.floor || ''}
+                    onChange={(e) => setDeliveryData(prev => ({ 
+                      ...prev, 
+                      floor: e.target.value,
+                      address: prev?.address || '',
+                      name: prev?.name || '',
+                      phone: prev?.phone || '',
+                      apartment: prev?.apartment || '',
+                      entrance: prev?.entrance || '',
+                      comment: prev?.comment || ''
+                    }))}
+                    placeholder="№"
+                  />
+                </div>
+              </div>
+            </div>
           )}
 
           {cart.items.length === 0 ? (
@@ -274,7 +514,18 @@ const CartModal: React.FC<CartModalProps> = ({ onClose }) => {
           <div className="modal-footer">
             <button
               className="btn btn-primary btn-full"
-              onClick={() => setShowOrderModal(true)}
+              onClick={() => {
+                if (orderType === 'delivery' && !deliveryData) {
+                  alert('Пожалуйста, укажите адрес доставки');
+                  return;
+                }
+                if (orderType === 'pickup' && !selectedPickup) {
+                  alert('Пожалуйста, выберите точку самовывоза');
+                  return;
+                }
+                setShowOrderModal(true);
+              }}
+              disabled={orderLoading}
             >
               Оформить заказ
             </button>
@@ -283,11 +534,16 @@ const CartModal: React.FC<CartModalProps> = ({ onClose }) => {
         {showOrderModal && (
           <OrderModal
             orderType={orderType}
-            pickupAddress={pickupAddress}
+            pickupAddress={pickupAddressSummary}
             deliveryAddress={deliveryAddress}
+            pickupLocation={selectedPickup || undefined}
             cart={cart}
             onClose={() => setShowOrderModal(false)}
             onSubmit={handleOrderSubmit}
+            isSubmitting={orderLoading}
+            initialName={clientName || deliveryData?.name || ''}
+            initialPhone={clientPhone || deliveryData?.phone || ''}
+            initialComment={orderComment || deliveryData?.comment || ''}
           />
         )}
 

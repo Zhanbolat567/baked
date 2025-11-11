@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './components.css';
 
 interface OrderModalProps {
@@ -7,68 +7,163 @@ interface OrderModalProps {
   deliveryAddress: string;
   cart: any;
   onClose: () => void;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: { clientName: string; clientPhone: string; orderComment: string; paymentMethod: string }) => Promise<void> | void;
+  isSubmitting: boolean;
+  initialComment?: string;
+  pickupLocation?: {
+    title: string;
+    address: string;
+    working_hours?: string;
+    phone?: string | null;
+  };
 }
 
-const OrderModal: React.FC<OrderModalProps> = ({ orderType, pickupAddress, deliveryAddress, cart, onClose, onSubmit }) => {
+const OrderModal: React.FC<OrderModalProps> = (props: OrderModalProps) => {
+  const {
+    orderType,
+    pickupAddress,
+    deliveryAddress,
+    cart,
+    onClose,
+    onSubmit,
+    isSubmitting,
+    initialComment = '',
+    pickupLocation,
+  } = props;
   const [clientName, setClientName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
-  const [orderComment, setOrderComment] = useState('');
-  const [orderLoading, setOrderLoading] = useState(false);
+  const [orderComment, setOrderComment] = useState(initialComment || '');
+  const [paymentMethod, setPaymentMethod] = useState('cash');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const formatPhone = (value: string): string => {
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, '');
+    
+    // Format as +7 (7XX) XXX-XX-XX
+    if (digits.length === 0) return '';
+    if (digits.length <= 1) return `+${digits}`;
+    if (digits.length <= 4) return `+${digits[0]} (${digits.slice(1)}`;
+    if (digits.length <= 7) return `+${digits[0]} (${digits.slice(1, 4)}) ${digits.slice(4)}`;
+    if (digits.length <= 9) return `+${digits[0]} (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
+    return `+${digits[0]} (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7, 9)}-${digits.slice(9, 11)}`;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhone(e.target.value);
+    setClientPhone(formatted);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setOrderLoading(true);
-    onSubmit({
-      clientName,
-      clientPhone,
-      orderComment,
+    await onSubmit({ 
+      clientName: clientName.trim(), 
+      clientPhone: clientPhone.replace(/\D/g, ''), // Send only digits
+      orderComment: orderComment.trim(),
+      paymentMethod 
     });
-    setOrderLoading(false);
   };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal order-modal" onClick={e => e.stopPropagation()}>
+  <div className="modal order-modal order-modal-new" onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2 className="modal-title">{orderType === 'pickup' ? 'Самовывоз' : 'Доставка'}</h2>
+          <h2 className="modal-title">Доставка</h2>
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
-        <form className="order-form" onSubmit={handleSubmit}>
-          {orderType === 'pickup' ? (
-            <>
-              <div className="order-row"><span>Адрес:</span> <span>{pickupAddress}</span></div>
-            </>
-          ) : (
-            <>
-              <div className="order-row"><span>Адрес доставки:</span> <span>{deliveryAddress}</span></div>
-            </>
-          )}
-          <div className="order-row">
-            <label>Имя
-              <input type="text" value={clientName} onChange={e => setClientName(e.target.value)} required placeholder="Введите имя" />
+        <form className="order-form-new" onSubmit={handleSubmit}>
+          {/* Address Display */}
+          <div className="order-address-display">
+            <div className="order-address-label">Адрес доставки</div>
+            <div className="order-address-value">{deliveryAddress}</div>
+          </div>
+
+          {/* Client Name */}
+          <div className="order-field-group">
+            <label className="order-field-label">
+              <span className="order-field-icon">👤</span>
+              Ваше имя
             </label>
+            <input
+              type="text"
+              className="order-input-new"
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
+              placeholder="Ваше имя"
+              required
+            />
           </div>
-          <div className="order-row">
-            <label>Телефон
-              <input type="tel" value={clientPhone} onChange={e => setClientPhone(e.target.value)} required placeholder="+7" />
+
+          {/* Client Phone */}
+          <div className="order-field-group">
+            <label className="order-field-label">
+              <span className="order-field-icon">📞</span>
+              Ваш номер телефона
             </label>
+            <input
+              type="tel"
+              className="order-input-new"
+              value={clientPhone}
+              onChange={handlePhoneChange}
+              placeholder="+7 (708) 871-12-38"
+              required
+            />
           </div>
-          <div className="order-row">
-            <label>Комментарий к заказу
-              <input type="text" value={orderComment} onChange={e => setOrderComment(e.target.value)} placeholder="Комментарий" />
+
+          {/* Payment Method */}
+          <div className="order-field-group">
+            <label className="order-field-label">
+              <span className="order-field-icon">💳</span>
+              Способ оплаты
             </label>
+            <select
+              className="order-input-new order-select"
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            >
+              <option value="cash">Наличными</option>
+              <option value="card">Картой</option>
+              <option value="kaspi">Kaspi</option>
+            </select>
           </div>
-          <div className="order-row">
-            <span>Товары в заказе: {cart.items.length} шт.</span>
-            <span>{cart.getTotalAmount()} ₸</span>
+
+          {/* Comment */}
+          <div className="order-field-group">
+            <label className="order-field-label">
+              <span className="order-field-icon">💬</span>
+              Комментарий к заказу
+            </label>
+            <textarea
+              className="order-input-new order-textarea"
+              value={orderComment}
+              onChange={(e) => setOrderComment(e.target.value)}
+              placeholder="Комментарий"
+              rows={3}
+            />
           </div>
-          <div className="order-row">
-            <span>Итого:</span>
-            <span>{cart.getTotalAmount()} ₸</span>
+
+          {/* Order Summary */}
+          <div className="order-summary-new">
+            <div className="order-summary-row">
+              <span>Товары в заказе: {cart.items.length} шт.</span>
+              <span>{cart.getTotalAmount()} ₸</span>
+            </div>
+            <div className="order-summary-row">
+              <span>Доставка</span>
+              <span>1000 ₸</span>
+            </div>
+            <div className="order-summary-row order-summary-bonus">
+              <span>Бонусы к начислению</span>
+              <span>+44,40 ◎</span>
+            </div>
+            <div className="order-summary-row order-summary-total">
+              <span>Итого</span>
+              <span>{cart.getTotalAmount() + 1000} ₸</span>
+            </div>
           </div>
-          <button className="btn btn-primary btn-full" type="submit" disabled={orderLoading}>
-            {orderLoading ? 'Оформляем...' : 'Заказать'}
+
+          {/* Submit Button */}
+          <button type="submit" className="order-submit-btn-new" disabled={isSubmitting}>
+            {isSubmitting ? 'Оформляем...' : 'Заказать'}
           </button>
         </form>
       </div>

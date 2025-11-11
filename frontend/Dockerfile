@@ -1,6 +1,10 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
+# Accept build argument for 2GIS API key
+ARG VITE_2GIS_API_KEY
+ENV VITE_2GIS_API_KEY=$VITE_2GIS_API_KEY
+
 RUN npm config set strict-ssl false
 COPY package*.json ./
 RUN npm ci

@@ -22,6 +22,7 @@ class UserResponse(UserBase):
     bonus_points: int
     is_active: bool
     created_at: datetime
+    avatar_url: Optional[str] = None
     
     class Config:
         from_attributes = True
@@ -30,6 +31,25 @@ class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
+
+
+class AdminProfileResponse(UserResponse):
+    pass
+
+
+class AdminProfileUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    phone_number: Optional[str] = None
+
+
+class AdminAvatarUpdate(BaseModel):
+    avatar_base64: str
+
+
+class AdminPasswordUpdate(BaseModel):
+    current_password: str
+    new_password: str = Field(..., min_length=6)
 
 # Category Schemas
 class CategoryBase(BaseModel):
@@ -205,3 +225,70 @@ class DashboardStats(BaseModel):
     total_orders_today: int
     total_orders_month: int
     active_orders: int
+
+
+# Delivery Zone Schemas
+class DeliveryZoneBase(BaseModel):
+    name: str
+    color: str
+    coordinates: List[List[float]]  # [[lat, lng], ...]
+    delivery_fee: float
+    min_order: float
+    estimated_time: str
+    is_active: bool = True
+
+class DeliveryZoneCreate(DeliveryZoneBase):
+    pass
+
+class DeliveryZoneUpdate(BaseModel):
+    name: Optional[str] = None
+    color: Optional[str] = None
+    coordinates: Optional[List[List[float]]] = None
+    delivery_fee: Optional[float] = None
+    min_order: Optional[float] = None
+    estimated_time: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class DeliveryZoneResponse(DeliveryZoneBase):
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
+
+
+# Pickup Location Schemas
+class PickupLocationBase(BaseModel):
+    title: str
+    address: str
+    working_hours: str
+    phone: Optional[str] = None
+    latitude: float
+    longitude: float
+    is_active: bool = True
+    display_order: int = 0
+
+
+class PickupLocationCreate(PickupLocationBase):
+    pass
+
+
+class PickupLocationUpdate(BaseModel):
+    title: Optional[str] = None
+    address: Optional[str] = None
+    working_hours: Optional[str] = None
+    phone: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    is_active: Optional[bool] = None
+    display_order: Optional[int] = None
+
+
+class PickupLocationResponse(PickupLocationBase):
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True

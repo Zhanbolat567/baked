@@ -1,45 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../../store';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import DeliveryMapModal from '../../components/admin/DeliveryMapModal';
-
-// Mock data for demonstration
-const mockOrders = [
-  {
-    id: 1,
-    customer_name: 'Иван Иванов',
-    phone: '+7 (701) 234-56-78',
-    total_amount: 4500,
-    status: 'paid',
-    delivery_type: 'delivery',
-    address: {
-      address: 'Астана, ул. Кабанбай батыра, 43',
-      apartment: '25',
-      entrance: '2',
-      floor: '5',
-    },
-    items: [
-      { product_name: 'Латте', quantity: 2, price: 1500 },
-      { product_name: 'Капучино', quantity: 1, price: 1500 },
-    ],
-    created_at: '2024-11-08T10:30:00',
-  },
-  {
-    id: 2,
-    customer_name: 'Мария Петрова',
-    phone: '+7 (702) 345-67-89',
-    total_amount: 2800,
-    status: 'pending',
-    delivery_type: 'pickup',
-    address: null,
-    items: [
-      { product_name: 'Американо', quantity: 1, price: 1200 },
-      { product_name: 'Круассан', quantity: 2, price: 800 },
-    ],
-    created_at: '2024-11-08T11:15:00',
-  },
-];
+import api from '../../services/api';
 
 const Orders: React.FC = () => {
   const navigate = useNavigate();
@@ -49,6 +13,30 @@ const Orders: React.FC = () => {
   
   const [selectedAddress, setSelectedAddress] = useState<any>(null);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [activeOrders, setActiveOrders] = useState<any[]>([]);
+  const [closedOrders, setClosedOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadOrders();
+  }, [tab]);
+
+  const loadOrders = async () => {
+    try {
+      setLoading(true);
+      if (tab === 'active') {
+        const data = await api.getActiveOrders();
+        setActiveOrders(data);
+      } else {
+        const data = await api.getClosedOrders();
+        setClosedOrders(data);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки заказов:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const tabs = useMemo(
     () => [
@@ -68,8 +56,6 @@ const Orders: React.FC = () => {
     setIsMapModalOpen(true);
   };
 
-  const activeOrders = mockOrders.filter((order) => order.status === 'pending' || order.status === 'paid');
-  const closedOrders = mockOrders.filter((order) => order.status === 'completed' || order.status === 'cancelled');
   const displayOrders = tab === 'active' ? activeOrders : closedOrders;
 
   return (
